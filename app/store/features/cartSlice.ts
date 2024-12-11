@@ -159,6 +159,28 @@ export const deleteCartItem = createAsyncThunk(
   }
 );
 
+export const clearCart = createAsyncThunk(
+  "cart/clearCart",
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      console.log("Clearing cart state");
+      // Clear both cart and wishlist items
+      await dispatch(fetchCartItems(CartType.CART));
+      await dispatch(fetchCartItems(CartType.WISHLIST));
+      
+      return {
+        cart: [],
+        wishlist: []
+      };
+    } catch (error) {
+      console.error("Failed to clear cart:", error);
+      return rejectWithValue(
+        error instanceof Error ? error.message : "Failed to clear cart"
+      );
+    }
+  }
+);
+
 const serializeItem = (item: any) => ({
   ...item,
   createdAt:
@@ -222,6 +244,19 @@ const cartSlice = createSlice({
       .addCase(fetchCartItems.rejected, (state, action) => {
         state[action.meta.arg].status = "failed";
         state[action.meta.arg].error = action.error.message || null;
+      })
+      .addCase(clearCart.fulfilled, (state) => {
+        // Reset both cart and wishlist to empty arrays
+        state[CartType.CART].items = [];
+        state[CartType.CART].status = "idle";
+        state[CartType.CART].error = null;
+        state[CartType.WISHLIST].items = [];
+        state[CartType.WISHLIST].status = "idle";
+        state[CartType.WISHLIST].error = null;
+      })
+      .addCase(clearCart.rejected, (state, action) => {
+        state[CartType.CART].status = "failed";
+        state[CartType.CART].error = action.error.message || "Failed to clear cart";
       });
   },
 });

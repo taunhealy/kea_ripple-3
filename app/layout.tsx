@@ -9,15 +9,6 @@ import dynamic from "next/dynamic";
 
 const inter = Inter({ subsets: ["latin"] });
 
-// Dynamic imports for larger components
-const AppSidebar = dynamic(
-  () =>
-    import("./components/ui/sidebar/app-sidebar").then((mod) => mod.AppSidebar),
-  {
-    ssr: false,
-  }
-);
-
 const Navbar = dynamic(() => import("./components/Navbar"), {
   ssr: true,
 });
@@ -34,13 +25,7 @@ export default function RootLayout({
           <div className="flex flex-col min-h-screen">
             <Navbar />
             <div className="flex flex-1">
-              <SidebarProvider>
-                <AppSidebar />
-                <main className="flex-1 p-4">
-                  <SidebarTrigger />
-                  {children}
-                </main>
-              </SidebarProvider>
+              {children}
             </div>
           </div>
           <Toaster />

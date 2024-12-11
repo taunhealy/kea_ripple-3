@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { stripe } from "@/lib/stripe";
 import prisma from "@/lib/prisma";
 import CheckoutStatus from "@/app/components/CheckoutStatus";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 
 export default async function CheckoutSuccessPage({
@@ -74,11 +74,13 @@ export default async function CheckoutSuccessPage({
       },
     });
 
+    console.log("Checkout completed successfully, redirecting to downloads");
+
     return (
       <CheckoutStatus
         status="success"
         message="Payment successful! Redirecting to your downloads..."
-        redirect="/presets?type=downloaded"
+        redirect="/presets?view=downloaded"
       />
     );
   } catch (error) {

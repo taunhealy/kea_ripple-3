@@ -17,20 +17,16 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user, account }) {
-      // Initial sign in
       if (account && user) {
-        console.log("🔑 Setting initial JWT token:", { user, account });
         return {
           ...token,
           userId: user.id,
           accessToken: account.access_token,
         };
       }
-      console.log("♻️ Reusing existing JWT token:", token);
       return token;
     },
     async session({ session, token, user }) {
-      console.log("📝 Setting session from token:", { token, user });
       if (session.user) {
         session.user.id = token.userId;
         session.accessToken = token.accessToken as string;
@@ -38,19 +34,14 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // If trying to access a protected page, store it
       if (url.startsWith(baseUrl)) {
         return url;
       }
-      // Default redirect to dashboard
       return `${baseUrl}/dashboard/stats`;
     },
   },
-  debug: process.env.NODE_ENV === "development", // Enable debug logs in development
+  debug: process.env.NODE_ENV === "development",
   session: {
     strategy: "jwt",
   },
 };
-
-const handler = NextAuth(authOptions);
-export { handler as GET, handler as POST };

@@ -47,7 +47,7 @@ export function RequestForm({ initialData, requestId }: RequestFormProps) {
   const welcomeMessage = (
     <div className="mb-6 text-sm text-muted-foreground">
       Hi {session.user.name || "there"}, you have successfully authenticated.
-      Your ID is {session.user.id}.
+
     </div>
   );
 
