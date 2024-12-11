@@ -1,0 +1,292 @@
+/* defines reusable component classes using tailwind config tokens */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Set base styles for HTML elements */
+  h1 {
+    @apply h1;
+  }
+  h2 {
+    @apply h2;
+  }
+  h3 {
+    @apply h3;
+  }
+  h4 {
+    @apply h4;
+  }
+  h5 {
+    @apply h5;
+  }
+  h6 {
+    @apply h6;
+  }
+}
+
+@layer components {
+  /* Display & Heading Styles */
+  .display {
+    @apply font-primary font-semibold tracking-[-0.02em] leading-tight
+    text-primary dark:text-secondary;
+    font-size: 72px;
+  }
+
+  .h1 {
+    @apply font-primary font-semibold tracking-[-0.02em] leading-tight
+    text-primary dark:text-secondary;
+    font-size: 60px;
+  }
+
+  .h2 {
+    @apply font-primary font-semibold tracking-[-0.02em] leading-tight
+    text-primary dark:text-secondary;
+    font-size: 48px;
+  }
+
+  .h3 {
+    @apply font-primary font-semibold tracking-[-0.015em] leading-snug
+    text-primary dark:text-secondary;
+    font-size: 36px;
+  }
+
+  .h4 {
+    @apply font-primary font-semibold tracking-[-0.01em] leading-snug
+    text-primary dark:text-secondary;
+    font-size: 30px;
+  }
+
+  .h5 {
+    @apply font-primary font-semibold tracking-[-0.01em] leading-snug
+    text-primary dark:text-secondary;
+    font-size: 24px;
+  }
+
+  .h6 {
+    @apply font-primary font-semibold tracking-normal leading-snug
+    text-primary dark:text-secondary;
+    font-size: 20px;
+  }
+
+  /* Text Styles */
+  .text-extra-small {
+    @apply font-primary leading-relaxed
+    text-primary dark:text-secondary;
+    font-size: 12px;
+  }
+
+  .text-small {
+    @apply font-primary leading-relaxed
+    text-primary dark:text-secondary;
+    font-size: 14px;
+  }
+
+  .text-main {
+    @apply font-primary leading-relaxed
+    text-primary dark:text-secondary;
+    font-size: 16px;
+  }
+
+  .text-large {
+    @apply font-primary leading-relaxed
+    text-primary dark:text-secondary;
+    font-size: 24px;
+  }
+
+  /* Layout Spacing System */
+  .container-large {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-medium {
+    @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-small {
+    @apply max-w-3xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Section Spacing */
+  .section-space-large {
+    @apply py-16 md:py-24;
+  }
+
+  .section-space-medium {
+    @apply py-12 md:py-16;
+  }
+
+  .section-space-small {
+    @apply py-8 md:py-12;
+  }
+
+  /* Component Spacing */
+  .stack-large {
+    @apply space-y-8;
+  }
+
+  .stack-medium {
+    @apply space-y-6;
+  }
+
+  .stack-small {
+    @apply space-y-4;
+  }
+
+  /* Grid Systems */
+  .grid-auto-fit {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+
+  .grid-auto-fill {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+
+  /* Button Styles */
+  .btn-primary {
+    @apply px-4 py-2 font-primary font-semibold
+    transition-colors duration-200
+    flex items-center justify-center
+    bg-tertiary text-secondary
+    hover:bg-tertiary/90
+    dark:bg-tertiary dark:text-secondary
+    dark:hover:bg-tertiary/80
+    text-base;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 font-primary font-semibold
+    transition-colors duration-200
+    flex items-center justify-center
+    bg-secondary/20 text-primary
+    hover:bg-secondary/30
+    dark:bg-secondary dark:text-primary
+    dark:hover:bg-secondary/90
+    text-base;
+  }
+
+  /* Focus States */
+  .focus-visible {
+    @apply focus:outline-none focus:ring-2 focus:ring-tertiary focus:ring-offset-2;
+  }
+
+  /* Spinner Styles */
+  .spinner {
+    @apply inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent motion-reduce:animate-[spin_1.5s_linear_infinite]
+    text-secondary dark:text-secondary;
+  }
+
+  /* Button Loading State */
+  .btn-primary.loading .spinner {
+    @apply text-secondary dark:text-secondary;
+  }
+
+  .btn-secondary.loading .spinner {
+    @apply text-primary dark:text-primary;
+  }
+}
+
+@layer utilities {
+  /* Custom Spacing Scale */
+  .space-1 {
+    padding: 16px;
+    margin: 16px;
+  }
+  .space-2 {
+    padding: 24px;
+    margin: 24px;
+  }
+  .space-3 {
+    padding: 36px;
+    margin: 36px;
+  }
+  .space-4 {
+    padding: 54px;
+    margin: 54px;
+  }
+  .space-5 {
+    padding: 81px;
+    margin: 81px;
+  }
+
+  /* Separate padding and margin utilities */
+  .p-scale-1 {
+    padding: 16px;
+  }
+  .p-scale-2 {
+    padding: 24px;
+  }
+  .p-scale-3 {
+    padding: 36px;
+  }
+  .p-scale-4 {
+    padding: 54px;
+  }
+  .p-scale-5 {
+    padding: 81px;
+  }
+
+  .m-scale-1 {
+    margin: 16px;
+  }
+  .m-scale-2 {
+    margin: 24px;
+  }
+  .m-scale-3 {
+    margin: 36px;
+  }
+  .m-scale-4 {
+    margin: 54px;
+  }
+  .m-scale-5 {
+    margin: 81px;
+  }
+
+  /* Focus States */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-tertiary focus:ring-offset-2;
+  }
+
+  /* Typography Utilities */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Animation Utilities */
+  .animate-fade {
+    @apply transition-opacity duration-300;
+  }
+
+  .animate-scale {
+    @apply transition-transform duration-300;
+  }
+
+  /* Responsive Utilities */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Dark Mode Overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Add any specific dark mode CSS variables here */
+  }
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none;
+  }
+}

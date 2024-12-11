@@ -1,0 +1,11 @@
+
+- Style tabs - tabs bar with tabs placed horizointal flex
+- Make VST and Genre have 3 visible options
+- Create preset API
+- Cart styling
+- Style - preset type flex 2 cols
+- Pack api routing
+- Preset Request api routing
+- Checkout routing
+- Split Payments routing
+- Sidebar change background color

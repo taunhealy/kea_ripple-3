@@ -1,0 +1,470 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+// Core User Model
+model User {
+  id                String             @id @default(cuid())
+  name              String?
+  username          String?            @unique
+  email             String             @unique
+  emailVerified     DateTime?
+  image             String?            @unique
+  websiteUrl        String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  // NextAuth required relations
+  accounts          Account[]
+  sessions          Session[]
+
+  // Your application relations
+  presets           PresetUpload[]
+  tutorials         Tutorial[]
+  presetRequests    PresetRequest[]
+  presetSubmissions PresetSubmission[]
+  presetPacks       PresetPackUpload[]
+  orders            Order[]
+  presetDownloads   PresetDownload[]
+  presetPackDownloads PresetPackDownload[]
+  wishlist            Wishlist[]
+  cart                Cart[]
+}
+
+
+// Core Content Models
+model PresetUpload {
+  id              String           @id @default(cuid())
+  stripeProductId String?         @unique
+  userId          String
+  title           String           @db.VarChar(255)
+  description     String?          @db.Text
+  presetType      PresetType       @default(LEAD)
+  soundPreviewUrl String?
+  presetFileUrl   String?
+  priceType       PriceType        @default(FREE)
+  spotifyLink     String?
+  originalFileName String?
+  price           Float?
+  guide           String?
+  tags            String[]
+  quantity        Int              @default(1)
+  itemType        ItemType         @default(PRESET)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  referenceTrackUrl String?
+  
+  genre           Genre?           @relation(fields: [genreId], references: [id], onDelete: SetNull)
+  genreId         String?
+  user              User              @relation(fields: [userId], references: [id])
+  vst             VST?             @relation(fields: [vstId], references: [id], onDelete: SetNull)
+  vstId           String?
+
+  presetRequestId String?
+  wishlistItems   WishlistItem[]
+
+  
+  // Child relations
+  priceHistory    PriceHistory[]
+  packs           PackPresets[]
+  cartItems       CartItem[]
+  downloads       PresetDownload[]
+  presetRequest    PresetRequest[]
+  
+
+  @@index([genreId])
+  @@index([vstId])
+  @@index([createdAt])
+}
+
+// Request/Submission Models
+model PresetRequest {
+  id             String             @id @default(cuid())
+  title          String
+  youtubeLink    String?
+  enquiryDetails String
+  status         RequestStatus      @default(OPEN)
+  tags           String[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  
+  // Relations
+  userId         String
+  genre          Genre?             @relation(fields: [genreId], references: [id], onDelete: SetNull)
+  genreId        String?
+  user           User               @relation(fields: [userId], references: [id])
+  
+  // Child relations
+  submissions    PresetSubmission[]
+  presetUpload  PresetUpload[]
+
+  @@index([userId])
+  @@index([genreId])
+}
+
+model PresetSubmission {
+  id              String        @id @default(cuid())
+  title           String
+  soundPreviewUrl String?
+  presetFileUrl   String?
+  guide           String?
+  tags            String[]
+  presetType      PresetType    @default(LEAD)
+  vstType         VstType       @default(SYNTH)
+  price           Float?
+  priceType       PriceType     @default(FREE)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  presetRequestId String
+  presetRequest   PresetRequest @relation(fields: [presetRequestId], references: [id])
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  vst             VST?          @relation(fields: [vstId], references: [id], onDelete: SetNull)
+  vstId           String?
+
+  @@index([presetRequestId])
+  @@index([userId])
+  @@index([vstId])
+}
+
+enum PriceType {
+  FREE
+  PREMIUM
+}
+
+
+enum PresetType {
+  PAD
+  LEAD
+  PLUCK
+  BASS
+  FX
+  OTHER
+}
+
+model VST {
+  id        String      @id @default(cuid())
+  name      String      @unique
+  type      VstType 
+  // ... other fields
+  
+  // Add this line to create the reverse relation
+  submissions PresetSubmission[]
+  presetPacks PresetPackUpload[]
+  presetUploads PresetUpload[]
+}
+
+model PresetPackUpload {
+  id              String         @id @default(cuid())
+  userId          String
+  title           String         @db.VarChar(255)
+  description     String?        @db.Text
+  priceType       PriceType     @default(FREE)
+  price           Float?
+  soundPreviewUrl String?
+  tags            String[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  genre           Genre?         @relation(fields: [genreId], references: [id], onDelete: SetNull)
+  genreId         String?
+  wishlistItems   WishlistItem[]
+
+  
+  // Relations
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vst             VST?             @relation(fields: [vstId], references: [id], onDelete: SetNull)
+  vstId           String?
+  
+  // Child relations
+  priceHistory    PriceHistory[]
+  presets         PackPresets[]
+  cartItems       CartItem[]
+  downloads       PresetPackDownload[]
+
+  @@index([genreId])
+  @@index([vstId])
+  @@index([createdAt])
+}
+
+
+// Download Tracking Models (enhanced with price info)
+model PresetDownload {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Float    
+  stripeSessionId String? @unique 
+  createdAt DateTime @default(now())
+  
+  preset    PresetUpload @relation(fields: [presetId], references: [id])
+  presetId  String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, presetId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model PresetPackDownload {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Float      
+  stripeSessionId String? @unique 
+  createdAt DateTime   @default(now())
+  
+  pack      PresetPackUpload @relation(fields: [packId], references: [id])
+  packId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([packId])
+  @@index([createdAt])
+}
+
+model Tutorial {
+  id              String        @id @default(cuid())
+  title           String
+  description     String
+  url             String
+  soundPreviewUrl String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  user            User              @relation(fields: [userId], references: [id])
+  userId          String
+}
+
+
+
+// Shopping Models
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String
+  type      CartType   @default(CART)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id])
+
+  @@unique([userId, type])
+}
+
+
+model Wishlist {
+  id           String         @id @default(cuid())
+  userId       String
+  items        WishlistItem[]
+  priceAlerts  Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  user         User          @relation(fields: [userId], references: [id])
+
+  @@unique([userId])
+}
+
+
+model WishlistItem {
+  id           String          @id @default(cuid())
+  itemType     ItemType
+  quantity     Int            @default(1)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  
+  // Relations
+  wishlist     Wishlist       @relation(fields: [wishlistId], references: [id])
+  wishlistId   String
+  preset       PresetUpload?  @relation(fields: [presetId], references: [id])
+  presetId     String?
+  pack         PresetPackUpload? @relation(fields: [packId], references: [id])
+  packId       String?
+
+  @@unique([wishlistId, presetId, packId])
+  @@index([wishlistId])
+  @@index([presetId])
+  @@index([packId])
+}
+
+
+model CartItem {
+  id           String          @id @default(cuid())
+  itemType     ItemType
+  quantity     Int            @default(1)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  
+  // Relations
+  cart         Cart           @relation(fields: [cartId], references: [id])
+  cartId       String
+  preset       PresetUpload?  @relation(fields: [presetId], references: [id])
+  presetId     String?
+  pack         PresetPackUpload?    @relation(fields: [packId], references: [id])
+  packId       String?
+  
+  // Child relations
+  priceHistory PriceHistory[]
+
+  @@unique([cartId, presetId, packId])
+  
+  @@index([cartId])
+  @@index([presetId])
+  @@index([packId])
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  userId            String
+  amount            Float
+  status            String
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  items             OrderItem[]
+  user              User        @relation(fields: [userId], references: [id])
+  stripeSessionId   String?     @unique
+  stripePaymentIntentId String? @unique
+
+  @@index([userId])
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  presetId  String?
+  sampleId  String?
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  order     Order    @relation(fields: [orderId], references: [id])
+  orderId   String
+}
+
+model Genre {
+  id             String         @id @default(cuid())
+  name           String         @unique
+  type           String
+  isSystem       Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  
+  presets        PresetUpload[]
+  presetRequests PresetRequest[]
+  presetPacks    PresetPackUpload[]
+}
+
+model PriceHistory {
+  id          String        @id @default(cuid())
+  price       Decimal
+  timestamp   DateTime      @default(now())
+  
+  presetId    String?
+  preset      PresetUpload? @relation(fields: [presetId], references: [id])
+  packId      String?
+  pack        PresetPackUpload?   @relation(fields: [packId], references: [id])
+  cartItemId  String?
+  cartItem    CartItem?     @relation(fields: [cartItemId], references: [id])
+
+  @@index([presetId])
+  @@index([packId])
+  @@index([cartItemId])
+}
+
+model PackPresets {
+  preset    PresetUpload @relation(fields: [presetId], references: [id])
+  presetId  String
+  pack      PresetPackUpload   @relation(fields: [packId], references: [id])
+  packId    String
+  addedAt   DateTime     @default(now())
+
+  @@id([presetId, packId])
+  @@index([presetId])
+  @@index([packId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  message   String
+  metadata  Json?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Enums
+enum VstType {
+SYNTH
+}
+
+enum GenreType {
+  SYSTEM
+  CUSTOM
+}
+
+enum RequestStatus {
+  OPEN
+  SATISFIED
+}
+
+
+// Add these models to your schema.prisma
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum CartType {
+  CART
+  WISHLIST
+}
+
+enum ItemType {
+  PRESET
+  PACK
+  REQUEST
+}
+
+
+
