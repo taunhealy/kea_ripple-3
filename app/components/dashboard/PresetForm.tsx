@@ -18,7 +18,7 @@ import {
 } from "@/app/components/ui/select";
 import { UploadDropzone } from "@/lib/uploadthing";
 import { useRouter } from "next/navigation";
-import { FileIcon, X } from "lucide-react";
+import { FileIcon, X, Loader2 } from "lucide-react";
 import { Label } from "@/app/components/ui/label";
 import { toast } from "react-hot-toast";
 import { GenreCombobox } from "@/app/components/GenreCombobox";
@@ -409,12 +409,21 @@ export function PresetForm({ initialData, presetId }: PresetFormProps) {
         </div>
       )}
 
-      <Button type="submit" disabled={mutation.isPending}>
-        {mutation.isPending
-          ? "Saving..."
-          : presetId
-          ? "Update Preset"
-          : "Create Preset"}
+      <Button 
+        type="submit" 
+        disabled={mutation.isPending}
+        className="w-full"
+      >
+        {mutation.isPending ? (
+          <>
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            {presetId ? "Updating..." : "Creating..."}
+          </>
+        ) : (
+          <>
+            {presetId ? "Update Preset" : "Create Preset"}
+          </>
+        )}
       </Button>
     </form>
   );

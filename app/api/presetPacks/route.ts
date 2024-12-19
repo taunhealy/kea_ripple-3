@@ -24,6 +24,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Get user with stripeAccountId
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        id: true,
+        email: true,
+        stripeAccountId: true
+      }
+    });
+
+    if (!user?.stripeAccountId) {
+      return NextResponse.json({ 
+        error: "You must connect your Stripe account before creating preset packs",
+        code: "STRIPE_ACCOUNT_REQUIRED"
+      }, { status: 400 });
+    }
+
     const data = await request.json();
     const validated = presetPackSchema.parse(data);
 
@@ -37,7 +54,7 @@ export async function POST(request: Request) {
         genreId: validated.genre,
         vstId: validated.vstId,
         tags: validated.tags,
-        userId: session.user.id,
+        userId: user.id,
         presets: {
           create: validated.presetIds.map((presetId) => ({
             presetId,

@@ -23,6 +23,7 @@ model User {
   websiteUrl        String?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+  stripeAccountId   String?            @unique
 
   // NextAuth required relations
   accounts          Account[]
@@ -227,6 +228,7 @@ model PresetPackDownload {
   packId    String
   user      User     @relation(fields: [userId], references: [id])
 
+  @@unique([userId, packId])
   @@index([userId])
   @@index([packId])
   @@index([createdAt])

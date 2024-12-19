@@ -25,24 +25,31 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
 
-    let user: { id: string; email: string } | null = await prisma.user.findUnique({
-      where: { email: session?.user.email! },
+    // Get user with stripeAccountId
+    const user = await prisma.user.findUnique({
+      where: { email: session?.user?.email! },
+      select: {
+        id: true,
+        email: true,
+        stripeAccountId: true
+      }
     });
 
     if (!session?.user?.id) {
-      console.log("Unauthorized session:", session);
       return NextResponse.redirect(new URL('/auth/signin', request.url));
     }
 
-    
+    if (!user?.stripeAccountId) {
+      return NextResponse.json({ 
+        error: "You must connect your Stripe account before uploading presets",
+        code: "STRIPE_ACCOUNT_REQUIRED"
+      }, { status: 400 });
+    }
 
     const body = await request.json();
-    console.log("Request body:", body);
-    console.log("User ID:", user?.id) ;
-
     const validatedData = presetSchema.parse(body);
 
-    // Add VST validation
+    // Rest of your existing preset creation code
     const vst = await prisma.vST.findUnique({
       where: { id: validatedData.vstId },
     });
@@ -58,8 +65,7 @@ export async function POST(request: Request) {
     const preset = await prisma.presetUpload.create({
       data: {
         ...validatedData,
-        // @ts-ignore
-        userId: user.id, // Use the database user ID
+        userId: user.id,
       },
     });
 
