@@ -24,6 +24,12 @@ const presetSchema = z.object({
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
+    const body = await request.json();
+    const validatedData = presetSchema.parse(body);
+
+    if (!session?.user?.id) {
+      return NextResponse.redirect(new URL('/auth/signin', request.url));
+    }
 
     // Get user with stripeAccountId
     const user = await prisma.user.findUnique({
@@ -35,19 +41,13 @@ export async function POST(request: Request) {
       }
     });
 
-    if (!session?.user?.id) {
-      return NextResponse.redirect(new URL('/auth/signin', request.url));
-    }
-
-    if (!user?.stripeAccountId) {
+    // Only check Stripe account for premium presets
+    if (validatedData.priceType === "PREMIUM" && !user?.stripeAccountId) {
       return NextResponse.json({ 
-        error: "You must connect your Stripe account before uploading presets",
+        error: "You must connect your Stripe account before uploading premium presets",
         code: "STRIPE_ACCOUNT_REQUIRED"
       }, { status: 400 });
     }
-
-    const body = await request.json();
-    const validatedData = presetSchema.parse(body);
 
     // Rest of your existing preset creation code
     const vst = await prisma.vST.findUnique({

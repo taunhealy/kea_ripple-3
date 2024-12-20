@@ -383,15 +383,15 @@ export function PresetForm({ initialData, presetId }: PresetFormProps) {
                 <SelectValue placeholder="Select price type" />
               </SelectTrigger>
               <SelectContent>
-                {Object.values(PriceType).map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {type}
-                  </SelectItem>
-                ))}
+                <SelectItem value="FREE">Free</SelectItem>
+                <SelectItem value="PREMIUM" disabled>Premium (Coming Soon)</SelectItem>
               </SelectContent>
             </Select>
           )}
         />
+        {errors.priceType && (
+          <p className="text-sm text-red-500">{errors.priceType.message}</p>
+        )}
       </div>
 
       {watch("priceType") === "PREMIUM" && (

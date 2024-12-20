@@ -24,6 +24,7 @@ model User {
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   stripeAccountId   String?            @unique
+  lemonSqueezyStoreId String?         @unique
 
   // NextAuth required relations
   accounts          Account[]
