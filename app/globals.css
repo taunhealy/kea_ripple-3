@@ -28,6 +28,43 @@
     --brand-text-inactive: #D9D9D9;    /* Grey text */
     --brand-text-active: #FFFFFF;      /* White text */
     --brand-text-hover: #00FFFF;       /* Cyan hover */
+    --theme-transition-duration: 500ms;
+    --theme-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Theme transition class */
+  .theme-transition {
+    transition: 
+      background-color var(--theme-transition-duration) var(--theme-transition-timing),
+      color var(--theme-transition-duration) var(--theme-transition-timing),
+      border-color var(--theme-transition-duration) var(--theme-transition-timing),
+      box-shadow var(--theme-transition-duration) var(--theme-transition-timing);
+  }
+
+  /* Creator theme colors with transitions */
+  [data-theme="creator"] {
+    --background: 0 0% 10%;        /* Dark grey */
+    --foreground: 0 0% 100%;      /* White */
+    --card: 0 0% 15%;             /* Slightly lighter grey */
+    --card-foreground: 0 0% 100%; /* White */
+    --popover: 0 0% 15%;          /* Slightly lighter grey */
+    --popover-foreground: 0 0% 100%; /* White */
+    --primary: 30 100% 50%;      /* Orange */
+    --primary-foreground: 0 0% 10%; /* Dark grey */
+    --secondary: 45 100% 50%;    /* Yellow */
+    --secondary-foreground: 0 0% 10%; /* Dark grey */
+    --muted: 0 0% 20%;          /* Medium grey */
+    --muted-foreground: 0 0% 85%; /* Light grey */
+    --accent: 30 100% 50%;      /* Orange */
+    --accent-foreground: 0 0% 10%; /* Dark grey */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%; /* White */
+    --border: 0 0% 25%;         /* Medium grey */
+    --input: 0 0% 25%;          /* Medium grey */
+    --ring: 30 100% 50%;        /* Orange */
+    --brand-text-inactive: #666666;    /* Darker grey */
+    --brand-text-active: #ff6b00;      /* Orange */
+    --brand-text-hover: #ffaa00;       /* Light orange */
   }
 
   /* Keep the same values for dark mode since we want dark mode by default */
@@ -54,6 +91,15 @@
     --brand-text-inactive: #D9D9D9;
     --brand-text-active: #00FFFF;
     --brand-text-hover: #00FFFF;
+  }
+
+  /* Add transition properties to elements that need to animate */
+  body,
+  .animate-theme {
+    transition: 
+      background-color var(--theme-transition-duration) var(--theme-transition-timing),
+      color var(--theme-transition-duration) var(--theme-transition-timing),
+      border-color var(--theme-transition-duration) var(--theme-transition-timing);
   }
 }
 

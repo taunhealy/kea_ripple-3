@@ -49,7 +49,7 @@ export default function Navbar() {
   const pathname = usePathname();
 
   return (
-    <nav className="border-b">
+    <nav className="theme-transition border-b">
       <div className="container mx-auto flex h-16 items-center justify-between">
         {/* Left section */}
         <div className="flex items-center gap-4">

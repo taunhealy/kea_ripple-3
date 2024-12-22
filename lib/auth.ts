@@ -3,6 +3,8 @@ import GoogleProvider from "next-auth/providers/google";
 import prisma from "@/lib/prisma";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { Adapter } from "next-auth/adapters";
+import CredentialsProvider from "next-auth/providers/credentials";
+import crypto from "crypto";
 
 if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
   throw new Error("Missing Google OAuth credentials in environment variables");
@@ -11,9 +13,39 @@ if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
   providers: [
+    CredentialsProvider({
+      name: "Email Login",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email }
+        });
+
+        if (!user) {
+          // Create new user if doesn't exist
+          return await prisma.user.create({
+            data: {
+              id: crypto.randomUUID(),
+              email: credentials.email,
+              name: credentials.email.split('@')[0],
+              updatedAt: new Date(),
+            }
+          });
+        }
+
+        return user;
+      }
+    }),
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
           prompt: "consent",
@@ -51,6 +83,7 @@ export const authOptions: NextAuthOptions = {
             updatedAt: new Date(),
           },
           create: {
+            id: crypto.randomUUID(),
             email: user.email,
             name: user.name || null,
             image: user.image || null,
@@ -68,6 +101,7 @@ export const authOptions: NextAuthOptions = {
             },
             update: {},
             create: {
+              id: crypto.randomUUID(),
               userId: dbUser.id,
               type: account.type,
               provider: account.provider,

@@ -96,7 +96,7 @@ export const SearchSidebar: React.FC<SearchSidebarProps> = ({
   };
 
   return (
-    <div className="space-y-6 color">
+    <div className="theme-transition bg-card border rounded-lg p-4">
       <h3 className="font-medium">Search</h3>
       <Input
         type="text"

@@ -1,19 +1,14 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/app/components/ui/button";
 
 export function SignInButton() {
-  const handleSignIn = async () => {
-    try {
-      await signIn("google", {
-        callbackUrl: "/",
-        redirect: true
-      });
-    } catch (error) {
-      console.error("💥 Sign-in error:", error);
-    }
+  const router = useRouter();
+
+  const handleClick = () => {
+    router.push("/auth/signin");
   };
 
-  return <Button onClick={handleSignIn}>Sign in with Google</Button>;
+  return <Button onClick={handleClick}>Sign in</Button>;
 }

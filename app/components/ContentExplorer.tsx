@@ -6,7 +6,7 @@ import { PresetPackGrid } from "@/app/components/shared/PresetPackGrid";
 import { PresetRequestGrid } from "@/app/components/shared/PresetRequestGrid";
 import { ItemType, RequestStatus } from "@prisma/client";
 import { ContentViewMode, RequestViewMode } from "@/types/enums";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSearchState } from "@/app/hooks/useSearchState";
 import { useContent } from "@/app/hooks/queries/useContent";
@@ -18,6 +18,7 @@ import { useSession } from "next-auth/react";
 import { useSetViewMode } from "@/app/hooks/queries/useViewMode";
 import { Compass, Upload, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
+import gsap from "gsap";
 
 interface ContentExplorerProps {
   itemType: ItemType;
@@ -250,23 +251,57 @@ export function ContentExplorer({
     }
   };
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const isCreatorTheme = state.activeTab === ContentViewMode.UPLOADED || 
+                          state.activeTab === ContentViewMode.DOWNLOADED;
+
+    const tl = gsap.timeline();
+
+    // Animate all theme elements
+    tl.to('.theme-transition', {
+      duration: 0.5,
+      backgroundColor: isCreatorTheme ? '#1a1a1a' : '#001B3A',
+      borderColor: isCreatorTheme ? '#333' : '#1e3a5f',
+      color: isCreatorTheme ? '#ffffff' : '#ffffff',
+      ease: "power2.inOut",
+    });
+
+  }, [state.activeTab]);
+
   return (
-    <div className="container mx-auto px-4 py-8 min-w-[1024px]">
-      <div className="flex flex-col md:flex-row gap-8">
-        <aside className="w-full md:w-64 min-w-[256px]">
-          <SearchSidebar
-            className="bg-black"
-            filters={filters}
-            updateFilters={updateFilters}
-            itemType={itemType}
-          />
-        </aside>
-        <main className="flex-1 min-w-[640px]">
-          <div className="flex justify-end mb-4">
-            {renderCreateButton()}
-          </div>
-          {renderContent()}
-        </main>
+    <div 
+      className="min-h-screen w-full theme-transition"
+      data-theme={
+        state.activeTab === ContentViewMode.UPLOADED || 
+        state.activeTab === ContentViewMode.DOWNLOADED 
+          ? "creator" 
+          : "default"
+      }
+    >
+      <div 
+        ref={containerRef}
+        className="container mx-auto px-4 py-8 theme-transition"
+      >
+        <div className="flex flex-col md:flex-row gap-8">
+          <aside className="w-full md:w-64 min-w-[256px] theme-transition">
+            <SearchSidebar
+              className="theme-transition"
+              filters={filters}
+              updateFilters={updateFilters}
+              itemType={itemType}
+            />
+          </aside>
+          <main className="flex-1 theme-transition">
+            <div className="flex justify-end mb-4">
+              {renderCreateButton()}
+            </div>
+            {renderContent()}
+          </main>
+        </div>
       </div>
     </div>
   );

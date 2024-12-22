@@ -44,14 +44,17 @@ export function PresetGrid({
     }
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {presets.map((preset) => (
-          <PresetCard
-            key={preset.id}
-            preset={preset}
-            contentViewMode={contentViewMode}
-          />
-        ))}
+      <div className="theme-transition">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {presets.map((preset) => (
+            <div key={preset.id} className="theme-transition">
+              <PresetCard
+                preset={preset}
+                contentViewMode={contentViewMode}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     );
   })();

@@ -9,13 +9,18 @@ const SPOTIFY_REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/spotify/cal
 
 export async function GET(request: Request) {
   try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!baseUrl) {
+      throw new Error('NEXT_PUBLIC_APP_URL environment variable is not set');
+    }
+
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
     const state = searchParams.get('state');
 
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.redirect('/login');
+      return NextResponse.redirect(`${baseUrl}/login`);
     }
 
     // Verify state matches
@@ -25,7 +30,7 @@ export async function GET(request: Request) {
     });
 
     if (state !== user?.spotifyState) {
-      return NextResponse.redirect('/error?message=invalid_state');
+      return NextResponse.redirect(`${baseUrl}/error?message=invalid_state`);
     }
 
     // Exchange code for access token
@@ -55,9 +60,10 @@ export async function GET(request: Request) {
     });
 
     // Redirect back to the app
-    return NextResponse.redirect('/dashboard');
+    return NextResponse.redirect(`${baseUrl}/dashboard`);
   } catch (error) {
     console.error("Spotify callback error:", error);
-    return NextResponse.redirect('/error?message=spotify_auth_failed');
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    return NextResponse.redirect(`${baseUrl}/error?message=spotify_auth_failed`);
   }
 } 

@@ -101,7 +101,7 @@ export async function GET(request: Request) {
                 name: true
               }
             },
-            VST: {
+            vst: {
               select: {
                 id: true,
                 name: true
@@ -139,7 +139,7 @@ export async function GET(request: Request) {
                 PresetUpload: {
                   include: {
                     Genre: true,
-                    VST: true,
+                    vst: true,
                     User: {
                       select: {
                         username: true,

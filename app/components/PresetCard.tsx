@@ -21,6 +21,7 @@ import { useEffect } from "react";
 import { useItemActions } from "@/app/hooks/useItemActions";
 import { getYouTubeThumbnail } from "@/utils/youtube";
 import { Badge } from "./ui/badge";
+import { cn } from "@/lib/utils";
 
 interface PresetCardProps {
   preset: PresetUpload & {
@@ -109,7 +110,7 @@ export function PresetCard({
   console.log("Preset data:", {
     genre: preset.genre,
     vst: preset.vst,
-    presetType: preset.presetTypes
+    presetType: preset.presetType
   });
   if (!preset) return null;
 
@@ -130,7 +131,7 @@ export function PresetCard({
   const isDownloaded = contentViewMode === ContentViewMode.DOWNLOADED;
 
   return (
-    <Card className="w-full flex flex-row gap-4 p-4 relative">
+    <Card className={cn("card-theme theme-transition", "w-full flex flex-row gap-4 p-4 relative")}>
       <div className="absolute top-4 right-4 bg-muted px-3 py-1.5 rounded-md">
         <span className="text-sm font-medium">
           {preset.priceType === PriceType.FREE ? "Free" : `$${preset.price}`}
@@ -139,8 +140,8 @@ export function PresetCard({
 
       <div className="flex-1 space-y-4">
         <div>
-          <CardTitle>{preset.title}</CardTitle>
-          <CardDescription>
+          <CardTitle className="theme-transition">{preset.title}</CardTitle>
+          <CardDescription className="theme-transition">
             By {preset.user?.username || "Anonymous"}
           </CardDescription>
         </div>
@@ -148,9 +149,9 @@ export function PresetCard({
         <div className="space-y-2">
           <p>{preset.description}</p>
           <div className="flex gap-2">
-            {preset.genre && <Badge>{preset.genre.name}</Badge>}
-            {preset.presetType && <Badge>{preset.presetType}</Badge>}
-            {preset.vst && <Badge>{preset.vst.name}</Badge>}
+            <Badge>{preset.genre?.name}</Badge>
+            <Badge>{preset.presetType.toString()}</Badge>
+            <Badge>{preset.vst?.name}</Badge>
           </div>
         </div>
 
