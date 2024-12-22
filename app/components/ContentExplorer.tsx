@@ -11,18 +11,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSearchState } from "@/app/hooks/useSearchState";
 import { useContent } from "@/app/hooks/queries/useContent";
 import { SearchFilters } from "@/types/SearchTypes";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/app/components/ui/tabs";
-import { CategoryTabs } from "@/app/components/CategoryTabs";
 import { CreatePresetButton } from "@/app/components/CreatePresetButton";
 import { CreatePackButton } from "@/app/components/CreatePackButton";
 import { CreateRequestButton } from "@/app/components/CreateRequestButton";
 import { useSession } from "next-auth/react";
 import { useSetViewMode } from "@/app/hooks/queries/useViewMode";
+import { Compass, Upload, Download } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ContentExplorerProps {
   itemType: ItemType;
@@ -34,8 +29,6 @@ export function ContentExplorer({
   itemType,
   initialFilters,
 }: ContentExplorerProps) {
-  console.log("[DEBUG] ContentExplorer - Initial itemType:", itemType);
-
   const router = useRouter();
   const searchParams = useSearchParams();
   const view = searchParams.get("view") || getDefaultView(itemType);
@@ -49,17 +42,7 @@ export function ContentExplorer({
     },
   });
 
-  console.log("[DEBUG] ContentExplorer - useContent result:", {
-    data,
-    isLoading,
-    filters: {
-      ...initialFilters,
-      view,
-    },
-  });
-
   const items = data || [];
-
   const { filters, updateFilters } = useSearchState();
 
   const [state, setState] = useState<{
@@ -172,17 +155,30 @@ export function ContentExplorer({
         {isAuthenticated && (
           <div className="flex space-x-6 mb-4">
             {[
-              { label: "Explore", value: ContentViewMode.EXPLORE },
-              { label: "My Uploads", value: ContentViewMode.UPLOADED },
-              { label: "My Downloads", value: ContentViewMode.DOWNLOADED },
+              { 
+                label: "Explore", 
+                value: ContentViewMode.EXPLORE,
+                icon: Compass 
+              },
+              { 
+                label: "My Uploads", 
+                value: ContentViewMode.UPLOADED,
+                icon: Upload 
+              },
+              { 
+                label: "My Downloads", 
+                value: ContentViewMode.DOWNLOADED,
+                icon: Download 
+              },
             ].map((tab) => (
               <button
                 key={tab.value}
-                className={`text-base font-medium ${
+                className={cn(
+                  "text-base font-medium flex items-center gap-2 transition-colors duration-200",
                   state.activeTab === tab.value
-                    ? "text-black"
-                    : "text-gray-500 hover:text-black"
-                }`}
+                    ? "text-[hsl(var(--brand-text-active))]"
+                    : "text-[hsl(var(--brand-text-inactive))] hover:text-[hsl(var(--brand-text-hover))]"
+                )}
                 onClick={() => {
                   const params = new URLSearchParams(searchParams.toString());
                   params.set("view", tab.value);
@@ -193,6 +189,7 @@ export function ContentExplorer({
                   }));
                 }}
               >
+                <tab.icon className="h-4 w-4" />
                 {tab.label}
               </button>
             ))}
@@ -211,6 +208,11 @@ export function ContentExplorer({
           presets={items}
           contentViewMode={contentViewMode as ContentViewMode}
           isLoading={isLoading}
+          buttonVariants={{
+            edit: "bg-[hsl(var(--background))] text-white hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))] border border-[hsl(var(--accent))]",
+            delete: "bg-[hsl(var(--background))] text-white hover:bg-destructive hover:text-destructive-foreground border border-destructive",
+            download: "bg-[hsl(var(--background))] text-white hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))] border border-[hsl(var(--accent))]"
+          }}
         />
       );
     }
@@ -219,6 +221,11 @@ export function ContentExplorer({
         packs={items}
         contentViewMode={contentViewMode as ContentViewMode}
         isLoading={isLoading}
+        buttonVariants={{
+          edit: "bg-[hsl(var(--background))] text-white hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))] border border-[hsl(var(--accent))]",
+          delete: "bg-[hsl(var(--background))] text-white hover:bg-destructive hover:text-destructive-foreground border border-destructive",
+          download: "bg-[hsl(var(--background))] text-white hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--accent-foreground))] border border-[hsl(var(--accent))]"
+        }}
       />
     );
   };
@@ -246,26 +253,17 @@ export function ContentExplorer({
   return (
     <div className="container mx-auto px-4 py-8 min-w-[1024px]">
       <div className="flex flex-col md:flex-row gap-8">
-        <aside className="w-full md:w-64 min-w-[256px] space-y-6">
-          <SearchSidebar className="bg-black"
+        <aside className="w-full md:w-64 min-w-[256px]">
+          <SearchSidebar
+            className="bg-black"
             filters={filters}
             updateFilters={updateFilters}
             itemType={itemType}
           />
         </aside>
         <main className="flex-1 min-w-[640px]">
-          <CategoryTabs
-            selectedItemType={itemType}
-            onSelect={(type) => {
-              // Let CategoryTabs handle the routing
-              // Remove any duplicate routing logic here
-            }}
-          />
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex justify-between items-center w-full">
-              <div />
-              {renderCreateButton()}
-            </div>
+          <div className="flex justify-end mb-4">
+            {renderCreateButton()}
           </div>
           {renderContent()}
         </main>

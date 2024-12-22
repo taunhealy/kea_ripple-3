@@ -92,60 +92,65 @@ export async function GET(request: Request) {
 
     switch (itemType) {
       case ItemType.PRESET:
-        const [presets, totalPresets] = await Promise.all([
-          prisma.presetUpload.findMany({
-            where: whereClause,
-            include: {
-              genre: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-              vst: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-              user: {
-                select: {
-                  username: true,
-                  image: true,
-                },
-              },
+        const items = await prisma.presetUpload.findMany({
+          where: whereClause,
+          include: {
+            Genre: {
+              select: {
+                id: true,
+                name: true
+              }
             },
-            orderBy: { createdAt: "desc" },
-            take: pageSize,
-            skip,
-          }),
-          prisma.presetUpload.count({ where: whereClause }),
-        ]);
+            VST: {
+              select: {
+                id: true,
+                name: true
+              }
+            },
+            User: {
+              select: {
+                username: true,
+                image: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: "desc"
+          },
+          take: pageSize,
+          skip: skip
+        });
 
         console.log("[DEBUG] Found presets:", {
-          count: presets.length,
-          firstPreset: presets[0],
-          totalPresets,
+          count: items.length,
+          firstPreset: items[0],
+          totalPresets: await prisma.presetUpload.count({ where: whereClause }),
         });
 
         // Simplified response to match what ContentExplorer expects
-        return NextResponse.json(presets);
+        return NextResponse.json(items);
 
       case ItemType.PACK:
         const packs = await prisma.presetPackUpload.findMany({
           where: whereClause,
           include: {
-            presets: {
+            PackPresets: {
               include: {
-                preset: {
+                PresetUpload: {
                   include: {
-                    genre: true,
-                    vst: true,
+                    Genre: true,
+                    VST: true,
+                    User: {
+                      select: {
+                        username: true,
+                        image: true,
+                      },
+                    },
                   },
                 },
               },
             },
-            user: {
+            User: {
               select: {
                 username: true,
                 image: true,
@@ -153,6 +158,8 @@ export async function GET(request: Request) {
             },
           },
           orderBy: { createdAt: "desc" },
+          take: pageSize,
+          skip: skip
         });
         return NextResponse.json(packs);
 

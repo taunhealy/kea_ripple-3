@@ -115,8 +115,9 @@ export async function GET(request: Request) {
         id: true,
         title: true,
         description: true,
+        presetType: true,
         genre: true,
-        vst: true,
+        VST: true,
         user: {
           select: {
             id: true,
@@ -125,6 +126,9 @@ export async function GET(request: Request) {
           },
         },
         userId: true,
+        priceType: true,
+        price: true,
+        referenceTrackUrl: true,
         _count: {
           select: {
             downloads: session?.user?.id

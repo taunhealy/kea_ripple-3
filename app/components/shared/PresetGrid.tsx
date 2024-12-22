@@ -7,17 +7,21 @@ import { PresetUpload } from "@prisma/client";
 import { CreatePresetButton } from "@/app/components/CreatePresetButton";
 
 interface PresetGridProps {
-  presets?: PresetUpload[];
+  presets: any[];
   contentViewMode: ContentViewMode;
   isLoading: boolean;
-  view?: string | null;
+  buttonVariants?: {
+    edit: string;
+    delete: string;
+    download: string;
+  };
 }
 
 export function PresetGrid({
   presets,
   contentViewMode,
   isLoading,
-  view,
+  buttonVariants,
 }: PresetGridProps) {
   console.log("[DEBUG] PresetGrid props:", {
     presetsLength: presets?.length,

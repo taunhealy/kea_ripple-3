@@ -6,7 +6,10 @@ import { Button } from "@/app/components/ui/button";
 export function SignInButton() {
   const handleSignIn = async () => {
     try {
-      await signIn("google");
+      await signIn("google", {
+        callbackUrl: "/",
+        redirect: true
+      });
     } catch (error) {
       console.error("💥 Sign-in error:", error);
     }

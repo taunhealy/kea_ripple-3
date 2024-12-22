@@ -1,66 +1,133 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, PriceType, PresetType, VstType, ItemType } from '@prisma/client'
+import { createId } from '@paralleldrive/cuid2'
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient()
 
 async function main() {
-  // Deletes all genres before seeding new ones
-  await prisma.genre.deleteMany();  // Deletes all genres
-  console.log("deleted all genres");
+  // First, delete PackPresets records
+  await prisma.packPresets.deleteMany({})
+  console.log('✅ Deleted existing pack presets')
 
-  // Array of genres to be added
-  const genres = [
-    "Pop", "Rock", "Hip-Hop", "R&B", "Country", "Jazz", "Classical", "Blues", 
-    "Reggae", "Latin", "Electronic", "Folk", "Indie", "Soul", "Punk", "Alternative", 
-    "Metal", "Dance", "K-pop", "Post-punk", "Gospel", "Funk", "Disco", "House", 
-    "Techno", "Trance", "Trap", "Reggaeton", "Ambient", "Ska", "Bluegrass", 
-    "World Music", "Future Bass", "Hardwave", "Wave", "Dubstep", "Lo-fi", "Chillwave", 
-    "Synthwave", "Deep House", "Electropop", "Glitch Hop", "Ambient Dub", 
-    "Future Funk", "Vaporwave", "Hardstyle", "Trapstep", "UK Garage", 
-    "Minimal Techno", "Dark Techno", "Glitchcore", "Juke", "Tropical House", 
-    "Chillstep", "Progressive Trance", "DnB (Drum and Bass)", "Breakbeat", 
-    "Garage House", "Tech House", "Euro-Trance", "Cinematic Dubstep", 
-    "Experimental Hip-Hop", "Chicago House", "Ghetto House", "Future Garage", 
-    "Post Dubstep", "Ambient Techno", "Jazztronica", "Futuristic Soul", 
-    "Noise Music", "Post-Rock", "Vocal House", "Dancehall", "Afrobeat", 
-    "Electro House", "Progressive House", "Big Room", "Tech Trance", 
-    "Minimal", "Psytrance", "Dark Psytrance", "Hard Trance", "Progressive Breaks", 
-    "Glitch Hop", "Chillout", "Downtempo", "Ambient House", "Electronicore", 
-    "Synthpop", "Industrial Techno", "Industrial Hardcore", "Euphoric Hardstyle", 
-    "Liquid Drum & Bass", "Jungle", "Electro Swing"
-  ];
+  // Then delete preset uploads
+  await prisma.presetUpload.deleteMany({})
+  console.log('✅ Deleted existing preset uploads')
 
-  // Loop through each genre and insert it into the database if it doesn't already exist
-  for (const genreName of genres) {
-    // Check if the genre already exists
-    const existingGenre = await prisma.genre.findUnique({
-      where: {
-        name: genreName,
-      },
-    });
+  // Then delete all existing users
+  await prisma.user.deleteMany({})
+  console.log('✅ Deleted existing users')
 
-    // Only create the genre if it doesn't already exist
-    if (!existingGenre) {
-      await prisma.genre.create({
-        data: {
-          name: genreName,
-          type: "SYSTEM", // Assuming you want to set the type to "SYSTEM"
-        },
-      });
-      console.log(`Added genre: ${genreName}`);
-    } else {
-      console.log(`Genre "${genreName}" already exists.`);
+  // First, create the admin user and store the ID
+  const adminUser = await prisma.user.create({
+    data: {
+      id: createId(),
+      email: 'admin@example.com',
+      username: 'admin',
+      name: 'Admin User',
+      updatedAt: new Date(),
     }
-  }
+  });
 
-  console.log("Seed data added");
+  // Create VSTs first
+  const vsts = await Promise.all([
+    prisma.vST.upsert({
+      where: { name: 'Serum' },
+      update: {},
+      create: {
+        id: createId(),
+        name: 'Serum',
+        type: VstType.SYNTH,
+      },
+    }),
+    prisma.vST.upsert({
+      where: { name: 'Phase Plant' },
+      update: {},
+      create: {
+        id: createId(),
+        name: 'Phase Plant',
+        type: VstType.SYNTH,
+      },
+    }),
+    prisma.vST.upsert({
+      where: { name: 'Vital' },
+      update: {},
+      create: {
+        id: createId(),
+        name: 'Vital',
+        type: VstType.SYNTH,
+      },
+    }),
+  ])
+
+  // Create genres
+  const genres = await Promise.all([
+    prisma.genre.upsert({
+      where: { name: 'Hardwave' },
+      update: {},
+      create: {
+        id: createId(),
+        name: 'Hardwave',
+        type: 'SYSTEM',
+        isSystem: true,
+        updatedAt: new Date(),
+      },
+    }),
+    prisma.genre.upsert({
+      where: { name: 'Dnb' },
+      update: {},
+      create: {
+        id: createId(),
+        name: 'Phonk',
+        type: 'SYSTEM',
+        isSystem: true,
+        updatedAt: new Date(),
+      },
+    }),
+  ])
+
+  // Create presets with proper relations
+  const presets = await Promise.all([
+    prisma.presetUpload.create({
+      data: {
+        id: createId(),
+        title: 'Deep Bass Preset',
+        description: 'Professional deep bass preset for modern productions',
+        presetType: PresetType.BASS,
+        priceType: PriceType.FREE,
+        price: 0,
+        userId: adminUser.id,
+        vstId: vsts[0].id,
+        genreId: genres[0].id,
+        itemType: ItemType.PRESET,
+        updatedAt: new Date(),
+        tags: ['bass', 'deep', 'modern'],
+      },
+    }),
+    prisma.presetUpload.create({
+      data: {
+        id: createId(),
+        title: 'Ethereal Pad',
+        description: 'Atmospheric pad perfect for ambient music',
+        presetType: PresetType.PAD,
+        priceType: PriceType.FREE,
+        price: 4.99,
+        userId: adminUser.id,
+        vstId: vsts[1].id,
+        genreId: genres[1].id,
+        itemType: ItemType.PRESET,
+        updatedAt: new Date(),
+        tags: ['pad', 'ambient', 'atmospheric'],
+      },
+    }),
+  ])
+
+  console.log('✅ Database seeded successfully')
 }
 
-// Run the main function
 main()
   .catch((e) => {
-    console.error(e);
-    process.exit(1);
+    console.error('Error seeding database:', e)
+    process.exit(1)
   })
   .finally(async () => {
-    await prisma.$disconnect();
-  });
+    await prisma.$disconnect()
+  })

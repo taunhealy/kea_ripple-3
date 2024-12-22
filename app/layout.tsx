@@ -1,6 +1,4 @@
 import { Inter } from "next/font/google";
-import { SidebarProvider } from "@/app/components/ui/sidebar/sidebar-provider";
-import { SidebarTrigger } from "./components/ui/sidebar/sidebar-trigger";
 import { Providers } from "./components/Providers";
 import { Toaster } from "sonner";
 

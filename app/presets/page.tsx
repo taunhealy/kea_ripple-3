@@ -19,15 +19,19 @@ export default function PresetsPage() {
     newParams.delete('type');
     newParams.set('view', view);
     router.replace(`/presets?${newParams.toString()}`);
-    return null; // Return null to prevent flash of content
+    return null;
   }
+
+  // If vstTypes is 'all', convert it to empty array for the filters
+  const vstTypes = searchParams.get("vstTypes");
+  const processedVstTypes = vstTypes === 'all' ? [] : (vstTypes?.split(",") || []);
 
   const initialFilters: SearchFilters = {
     ...DEFAULT_FILTERS,
     searchTerm: searchParams.get("searchTerm") || "",
     presetTypes: (searchParams.get("presetTypes")?.split(",") as PresetType[]) || [],
     genres: searchParams.get("genres")?.split(",") || [],
-    vstTypes: searchParams.get("vstTypes")?.split(",") || [],
+    vstTypes: processedVstTypes,
     priceTypes: (searchParams.get("priceTypes")?.split(",") as PriceType[]) || [],
     page: parseInt(searchParams.get("page") || "1"),
     itemType: (searchParams.get("itemType")?.toUpperCase() as ItemType) || ItemType.PRESET,

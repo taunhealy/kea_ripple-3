@@ -9,15 +9,21 @@ import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 
 interface PresetPackGridProps {
-  packs?: PresetPackWithRelations[];
+  packs: any[];
   contentViewMode: ContentViewMode;
   isLoading: boolean;
+  buttonVariants?: {
+    edit: string;
+    delete: string;
+    download: string;
+  };
 }
 
 export function PresetPackGrid({
   packs,
   contentViewMode,
   isLoading,
+  buttonVariants,
 }: PresetPackGridProps) {
   if (isLoading) {
     return <LoadingSkeleton />;

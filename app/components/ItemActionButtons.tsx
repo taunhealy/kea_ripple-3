@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "./ui/button";
+import { ActionButton } from "./ui/action-button";
 import {
   ShoppingCartIcon,
   HeartIcon,
@@ -9,10 +9,10 @@ import {
   Loader2Icon,
   PlayIcon,
   PauseIcon,
+  DownloadIcon,
 } from "lucide-react";
 import { useItemActions } from "@/app/hooks/useItemActions";
 import { ItemActionButtonsProps } from "@/types/actions";
-import { DownloadButton } from "./shared/DownloadButton";
 import { ItemType } from "@prisma/client";
 import { useAudioPlayer } from "@/app/hooks/useAudioPlayer";
 import { toast } from "react-hot-toast";
@@ -51,33 +51,21 @@ export function ItemActionButtons({
   if (isOwner || isDownloaded) {
     return (
       <div className="flex gap-2">
-        <DownloadButton
-          itemId={itemId}
-          itemType={itemType.toLowerCase() as ItemType}
-        />
+        <ActionButton variant="download" size="icon" className="h-8 w-8">
+          <DownloadIcon className="h-4 w-4" />
+        </ActionButton>
         {isOwner && (
           <div className="flex gap-2">
-            <Button
-              onClick={onEdit}
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 bg-white/90 hover:bg-white shadow-sm"
-            >
+            <ActionButton variant="edit" size="icon" className="h-8 w-8" onClick={onEdit}>
               <EditIcon className="h-4 w-4" />
-            </Button>
-            <Button
-              onClick={handleDelete}
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 bg-white/90 hover:bg-white shadow-sm"
-              disabled={isDeleting}
-            >
+            </ActionButton>
+            <ActionButton variant="delete" size="icon" className="h-8 w-8" onClick={handleDelete}>
               {isDeleting ? (
                 <Loader2Icon className="h-4 w-4 animate-spin" />
               ) : (
                 <TrashIcon className="h-4 w-4" />
               )}
-            </Button>
+            </ActionButton>
           </div>
         )}
       </div>
@@ -87,23 +75,23 @@ export function ItemActionButtons({
   // Show cart/wishlist buttons for non-owned/non-downloaded items
   return (
     <div className="flex items-center gap-2">
-      <Button
-        onClick={() => play(itemId, itemType)}
-        variant="secondary"
+      <ActionButton
+        variant="play"
         size="icon"
         className="h-8 w-8 bg-white/90 hover:bg-white shadow-sm"
+        onClick={() => play(itemId, itemType)}
       >
         {isCurrentlyPlaying ? (
           <PauseIcon className="h-4 w-4" />
         ) : (
           <PlayIcon className="h-4 w-4" />
         )}
-      </Button>
-      <Button
-        onClick={() => handleAddToCart()}
-        variant="secondary"
+      </ActionButton>
+      <ActionButton
+        variant="cart"
         size="icon"
         className="h-8 w-8 bg-white/90 hover:bg-white shadow-sm"
+        onClick={() => handleAddToCart()}
         disabled={isAddingToCart}
       >
         {isAddingToCart ? (
@@ -111,12 +99,12 @@ export function ItemActionButtons({
         ) : (
           <ShoppingCartIcon className="h-4 w-4" />
         )}
-      </Button>
-      <Button
-        onClick={() => handleAddToWishlist()}
-        variant="secondary"
+      </ActionButton>
+      <ActionButton
+        variant="wishlist"
         size="icon"
         className="h-8 w-8 bg-white/90 hover:bg-white shadow-sm"
+        onClick={() => handleAddToWishlist()}
         disabled={isAddingToWishlist}
       >
         {isAddingToWishlist ? (
@@ -124,7 +112,7 @@ export function ItemActionButtons({
         ) : (
           <HeartIcon className="h-4 w-4" />
         )}
-      </Button>
+      </ActionButton>
     </div>
   );
 }

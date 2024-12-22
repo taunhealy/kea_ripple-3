@@ -106,6 +106,11 @@ export function PresetCard({
 
   console.log("Preset data:", preset);
   console.log("VST data:", preset.vst);
+  console.log("Preset data:", {
+    genre: preset.genre,
+    vst: preset.vst,
+    presetType: preset.presetTypes
+  });
   if (!preset) return null;
 
   const displayPrice =
@@ -143,9 +148,9 @@ export function PresetCard({
         <div className="space-y-2">
           <p>{preset.description}</p>
           <div className="flex gap-2">
-            <Badge>{preset.genre?.name}</Badge>
-            <Badge>{preset.presetType.toString()}</Badge>
-            <Badge>{preset.vst?.name}</Badge>
+            {preset.genre && <Badge>{preset.genre.name}</Badge>}
+            {preset.presetType && <Badge>{preset.presetType}</Badge>}
+            {preset.vst && <Badge>{preset.vst.name}</Badge>}
           </div>
         </div>
 

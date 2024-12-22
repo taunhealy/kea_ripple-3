@@ -3,7 +3,8 @@
 import { useSession } from "next-auth/react";
 import { SignInButton } from "./auth/SignInButton";
 import { SignOutButton } from "./auth/SignOutButton";
-import { Link, UserIcon } from "lucide-react";
+import { UserIcon } from "lucide-react";
+import Link from "next/link";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -16,13 +17,41 @@ import {
   AvatarFallback,
 } from "@/app/components/ui/avatar";
 import { CartIndicator } from "./CartIndicator";
+import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
+import { ItemType } from "@prisma/client";
+import { ContentViewMode, RequestViewMode } from "@/types/enums";
+import { SpotifyStatus } from "./SpotifyStatus";
+
+const NAV_ITEMS = [
+  {
+    value: ItemType.PRESET,
+    label: "Presets",
+    href: "/presets",
+    defaultView: ContentViewMode.EXPLORE,
+  },
+  {
+    value: ItemType.PACK,
+    label: "Packs",
+    href: "/packs",
+    defaultView: ContentViewMode.EXPLORE,
+  },
+  {
+    value: ItemType.REQUEST,
+    label: "Requests",
+    href: "/requests",
+    defaultView: RequestViewMode.PUBLIC,
+  },
+];
 
 export default function Navbar() {
   const { data: session, status } = useSession();
+  const pathname = usePathname();
 
   return (
     <nav className="border-b">
-      <div className="container mx-auto flex items-center justify-between p-4">
+      <div className="container mx-auto flex h-16 items-center justify-between">
+        {/* Left section */}
         <div className="flex items-center gap-4">
           <Link href="/" className="font-bold">
             Ripple
@@ -34,7 +63,31 @@ export default function Navbar() {
           )}
         </div>
 
+        {/* Center section - Navigation */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex space-x-6">
+            {NAV_ITEMS.map((item) => (
+              <Link
+                key={item.value}
+                href={`${item.href}?view=${item.defaultView}`}
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary",
+                  pathname.startsWith(item.href)
+                    ? "text-foreground font-semibold"
+                    : "text-muted-foreground"
+                )}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Right section */}
         <div className="flex items-center gap-4">
+          {status === "authenticated" && (
+            <SpotifyStatus />
+          )}
           {status === "authenticated" ? (
             <>
               <CartIndicator />

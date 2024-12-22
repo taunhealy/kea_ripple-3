@@ -11,6 +11,9 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ItemType } from "@prisma/client";
 import { MultiSelect } from "@/app/components/ui/MultiSelect";
+import { Switch } from "@/app/components/ui/switch";
+import { cn } from "@/lib/utils";
+import { Minus, Plus } from "lucide-react";
 
 const PRESET_TYPES = Object.values(PresetType);
 const PRICE_TYPES = Object.values(PriceType);
@@ -103,21 +106,41 @@ export const SearchSidebar: React.FC<SearchSidebarProps> = ({
       />
 
       <div className="space-y-2">
-        <h3 className="font-medium">Price</h3>
-        {PRICE_TYPES.map((priceType) => (
-          <div key={priceType} className="flex items-center">
-            <Checkbox
-              id={`price-${priceType}`}
-              checked={filters.priceTypes?.includes(priceType)}
-              onCheckedChange={(checked) =>
-                handleFilterChange("priceTypes", priceType, checked as boolean)
-              }
-            />
-            <Label htmlFor={`price-${priceType}`} className="ml-2">
-              {priceType.charAt(0) + priceType.slice(1).toLowerCase()}
-            </Label>
-          </div>
-        ))}
+        
+        <div className="grid grid-cols-2 gap-1 rounded-md bg-muted p-1">
+          <button
+            onClick={() => {
+              filterMutation.mutate({
+                ...filters,
+                priceTypes: ["FREE"]
+              });
+            }}
+            className={cn(
+              "rounded-sm px-3 py-1.5 text-sm font-medium transition-all",
+              filters.priceTypes?.includes("FREE") 
+                ? "bg-background shadow" 
+                : "text-muted-foreground hover:bg-background/50"
+            )}
+          >
+            Free
+          </button>
+          <button
+            onClick={() => {
+              filterMutation.mutate({
+                ...filters,
+                priceTypes: ["PREMIUM"]
+              });
+            }}
+            className={cn(
+              "rounded-md px-3 py-1.5 text-sm font-medium transition-all",
+              filters.priceTypes?.includes("PREMIUM") 
+                ? "bg-background shadow" 
+                : "text-muted-foreground hover:bg-background/50"
+            )}
+          >
+            Premium
+          </button>
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -140,18 +163,58 @@ export const SearchSidebar: React.FC<SearchSidebarProps> = ({
 
       <div className="space-y-2">
         <h3 className="font-medium">VST</h3>
-        <MultiSelect
-          options={
-            vsts?.map((vst: any) => ({
-              value: vst.id,
-              label: vst.name,
-            })) || []
-          }
-          value={filters.vstTypes || []}
-          onChange={handleVstsChange}
-          placeholder="Search VSTs..."
-          className="custom-multiselect"
-        />
+        <div className="flex flex-col gap-1 rounded-md bg-muted p-1">
+          {console.log("Current vstTypes:", filters.vstTypes)}
+          <button
+            onClick={() => {
+              filterMutation.mutate({
+                ...filters,
+                vstTypes: []  // Empty array means "All"
+              });
+            }}
+            className={cn(
+              "rounded-sm px-3 py-1.5 text-sm font-medium transition-all flex items-center justify-between",
+              (!filters.vstTypes?.length || filters.vstTypes === undefined)
+                ? "bg-background shadow"
+                : "text-muted-foreground hover:bg-background/50"
+            )}
+          >
+            <span>All</span>
+            {(!filters.vstTypes?.length || filters.vstTypes === undefined) ? (
+              <Minus className="h-4 w-4 ml-2" />
+            ) : (
+              <Plus className="h-4 w-4 ml-2" />
+            )}
+          </button>
+          {vsts?.filter((vst: any) => 
+            ['Serum', 'Vital', 'Phase Plant'].includes(vst.name)
+          ).map((vst: any) => (
+            <button
+              key={vst.id}
+              onClick={() => {
+                filterMutation.mutate({
+                  ...filters,
+                  vstTypes: filters.vstTypes?.includes(vst.id)
+                    ? filters.vstTypes.filter(v => v !== vst.id)
+                    : [...(filters.vstTypes || []), vst.id]
+                });
+              }}
+              className={cn(
+                "rounded-sm px-3 py-1.5 text-sm font-medium transition-all flex items-center justify-between",
+                filters.vstTypes?.includes(vst.id)
+                  ? "bg-background shadow"
+                  : "text-muted-foreground hover:bg-background/50"
+              )}
+            >
+              <span>{vst.name}</span>
+              {filters.vstTypes?.includes(vst.id) ? (
+                <Minus className="h-4 w-4 ml-2" />
+              ) : (
+                <Plus className="h-4 w-4 ml-2" />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-2">

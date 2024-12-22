@@ -1,24 +1,16 @@
 "use client";
 
-import { ContentExplorer } from "@/app/components/ContentExplorer";
-import { ItemType } from "@prisma/client";
-import { Suspense } from "react";
-import { Skeleton } from "@/app/components/ui/skeleton";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { ContentViewMode } from "@/types/enums";
 
 export default function HomePage() {
-  return (
-    <Suspense fallback={<LoadingSkeleton />}>
-      <ContentExplorer itemType={ItemType.PRESET} initialFilters={{}} />
-    </Suspense>
-  );
-}
+  const router = useRouter();
 
-function LoadingSkeleton() {
-  return (
-    <div className="space-y-4">
-      <Skeleton className="h-[200px] w-full" />
-      <Skeleton className="h-[200px] w-full" />
-      <Skeleton className="h-[200px] w-full" />
-    </div>
-  );
+  useEffect(() => {
+    // Redirect to presets with Explore view and All VSTs selected
+    router.replace("/presets?view=explore&vstTypes=all");
+  }, [router]);
+
+  return null; // Return null since we're redirecting
 }
