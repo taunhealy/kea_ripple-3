@@ -1,47 +1,31 @@
-import { z } from "zod";
+import { z } from "zod"
 
-export const productSchema = z.object({
-  name: z.string(),
-  description: z.string(),
-  status: z.enum(["draft", "published", "archived"]),
-  price: z.number().min(1),
-  images: z.array(z.string()).min(1, "At least one image is required"),
-  category: z.enum(["men", "women", "kids"]),
-  isFeatured: z.boolean().optional(),
-});
+export const activitySchema = z.object({
+  title: z.string().min(3, "Title must be at least 3 characters"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  shortDescription: z.string().optional(),
+  duration: z.number().min(15, "Duration must be at least 15 minutes"),
+  maxParticipants: z.number().min(1, "Must allow at least 1 participant"),
+  minParticipants: z.number().default(1),
+  price: z.number().min(0, "Price cannot be negative"),
+  currency: z.string().default("USD"),
+  locationId: z.string().optional(),
+  categoryId: z.string(),
+  requirements: z.string().optional(),
+  included: z.array(z.string()),
+  excluded: z.array(z.string()),
+  cancellationPolicy: z.enum(["FLEXIBLE", "MODERATE", "STRICT", "NON_REFUNDABLE"]),
+  tags: z.array(z.string()).default([])
+})
 
-export const bannerSchema = z.object({
-  title: z.string(),
-  imageString: z.string(),
-});
-
-export const photographerProfileSchema = z.object({
-  name: z.string(),
-  email: z.string().email(),
-  location: z.string(),
-  priceRange: z.string(),
-  portfolioImages: z.array(z.string()),
-  googleCalendarLink: z.string().url().optional(),
-  packages: z.array(
-    z.object({
-      name: z.string(),
-      description: z.string(),
-      price: z.number(),
-    })
-  ),
-  experience: z.number().int().min(0, "Experience must be a positive number"),
-  portfolioUrl: z.string().url("Invalid portfolio URL").optional(),
-  socialMedia: z
-    .object({
-      instagram: z.string().optional(),
-      twitter: z.string().optional(),
-      facebook: z.string().optional(),
-    })
-    .optional(),
-});
-
-export const profileSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  profileImage: z.string().url().optional(),
-});
+export const scheduleSchema = z.object({
+  startDate: z.string().datetime(),
+  endDate: z.string().datetime(),
+  startTime: z.string().datetime(),
+  endTime: z.string().datetime(),
+  daysOfWeek: z.array(z.number().min(0).max(6)),
+  maxParticipants: z.number().min(1),
+  price: z.number().optional(),
+  isRecurring: z.boolean().default(false),
+  recurringUntil: z.string().datetime().optional()
+})

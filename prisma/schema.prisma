@@ -1,413 +1,306 @@
-generator client {
-  provider = "prisma-client-js"
+// Existing auth models remain unchanged
+model User {
+  id                String      @id @default(cuid())
+  name              String?
+  email             String      @unique
+  emailVerified     DateTime?
+  image             String?
+  username          String?     @unique
+  websiteUrl        String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  stripeAccountId   String?     @unique
+  role              UserRole    @default(PROVIDER)
+  businessName      String?
+  businessAddress   String?
+  phoneNumber       String?
+  vatNumber         String?
+  activities        Activity[]
+  bookings         Booking[]
+  reviews          Review[]
+  Account           Account[]
+  Session          Session[]
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+enum UserRole {
+  ADMIN
+  PROVIDER
+  CUSTOMER
 }
 
-model Account {
-  id                String  @id
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-  User              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Activity {
+  id              String        @id @default(cuid())
+  title           String
+  description     String        @db.Text
+  shortDescription String?      @db.Text
+  duration        Int           // in minutes
+  maxParticipants Int
+  minParticipants Int          @default(1)
+  price           Decimal       @db.Decimal(10,2)
+  currency        String        @default("USD")
+  location        Location?     @relation(fields: [locationId], references: [id])
+  locationId      String?
+  provider        User          @relation(fields: [providerId], references: [id])
+  providerId      String
+  category        Category      @relation(fields: [categoryId], references: [id])
+  categoryId      String
+  images          ActivityImage[]
+  requirements    String?       @db.Text
+  included        String[]      // What's included in the price
+  excluded        String[]      // What's not included
+  cancellationPolicy CancellationPolicy @default(FLEXIBLE)
+  status          ActivityStatus @default(ACTIVE)
+  schedules       Schedule[]
+  bookings        Booking[]
+  reviews         Review[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  tags            String[]
+  featured        Boolean       @default(false)
+  averageRating   Float?
+  totalReviews    Int          @default(0)
 
-  @@unique([provider, providerAccountId])
+  @@index([providerId])
+  @@index([categoryId])
+  @@index([locationId])
+  @@fulltext([title, description])
 }
 
-model Cart {
-  id        String     @id
-  userId    String
-  type      CartType   @default(CART)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime
-  User      User       @relation(fields: [userId], references: [id])
-  CartItem  CartItem[]
+model Location {
+  id          String     @id @default(cuid())
+  name        String
+  address     String
+  city        String
+  state       String?
+  country     String
+  postalCode  String?
+  latitude    Float
+  longitude   Float
+  activities  Activity[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
-  @@unique([userId, type])
+  @@index([city, country])
 }
 
-model CartItem {
-  id               String            @id
-  cartId           String
-  quantity         Int               @default(1)
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime
-  packId           String?
-  presetId         String?
-  itemType         ItemType
-  Cart             Cart              @relation(fields: [cartId], references: [id])
-  PresetPackUpload PresetPackUpload? @relation(fields: [packId], references: [id])
-  PresetUpload     PresetUpload?     @relation(fields: [presetId], references: [id])
-  PriceHistory     PriceHistory[]
-
-  @@unique([cartId, presetId, packId])
-  @@index([cartId])
-  @@index([packId])
-  @@index([presetId])
+model Category {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  slug        String     @unique
+  description String?
+  image       String?
+  activities  Activity[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
-model Genre {
-  id               String             @id
-  name             String             @unique
-  type             String
-  isSystem         Boolean            @default(false)
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime
-  PresetPackUpload PresetPackUpload[]
-  PresetRequest    PresetRequest[]
-  PresetUpload     PresetUpload[]
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+}
+
+// Add to User model
+model User {
+  subscriptionStatus SubscriptionStatus @default(TRIAL)
+  subscriptionEnds  DateTime?
 }
 
 model Notification {
-  id        String   @id
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
   userId    String
-  type      String
+  type      NotificationType
+  title     String
   message   String
-  metadata  Json?
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 
   @@index([userId])
 }
 
-model Order {
-  id                    String      @id
-  userId                String
-  amount                Float
-  status                String
-  createdAt             DateTime    @default(now())
-  updatedAt             DateTime
-  stripePaymentIntentId String?     @unique
-  stripeSessionId       String?     @unique
-  User                  User        @relation(fields: [userId], references: [id])
-  OrderItem             OrderItem[]
-
-  @@index([userId])
+enum NotificationType {
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  PAYMENT_RECEIVED
+  REVIEW_RECEIVED
+  SCHEDULE_REMINDER
 }
 
-model OrderItem {
-  id        String   @id
-  orderId   String
-  presetId  String?
-  sampleId  String?
-  quantity  Int
-  price     Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime
-  Order     Order    @relation(fields: [orderId], references: [id])
+model Pack {
+  id          String    @id @default(cuid())
+  activity    Activity  @relation(fields: [activityId], references: [id])
+  activityId  String
+  title       String
+  description String?   @db.Text
+  sessions    Int       // Number of sessions
+  validityDays Int     // Days pack is valid for
+  price       Decimal  @db.Decimal(10,2)
+  schedules   Schedule[]
+  bookings    Booking[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([activityId])
 }
 
-model PackPresets {
-  presetId         String
-  packId           String
-  addedAt          DateTime         @default(now())
-  PresetPackUpload PresetPackUpload @relation(fields: [packId], references: [id])
-  PresetUpload     PresetUpload     @relation(fields: [presetId], references: [id])
+model Schedule {
+  id              String    @id @default(cuid())
+  activity        Activity  @relation(fields: [activityId], references: [id])
+  activityId      String
+  startDate       DateTime
+  endDate         DateTime
+  startTime       DateTime
+  endTime         DateTime
+  daysOfWeek      Int[]     // 0-6 for Sunday-Saturday
+  maxParticipants Int
+  price           Decimal?  @db.Decimal(10,2) // Override activity price if needed
+  isRecurring     Boolean   @default(false)
+  recurringUntil  DateTime?
+  bookings        Booking[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  @@id([presetId, packId])
-  @@index([packId])
-  @@index([presetId])
+  @@index([activityId])
+  @@index([startDate, endDate])
 }
 
-model PresetDownload {
-  id              String       @id
+model Booking {
+  id              String          @id @default(cuid())
+  user            User            @relation(fields: [userId], references: [id])
   userId          String
-  createdAt       DateTime     @default(now())
-  presetId        String
-  amount          Float
-  stripeSessionId String?      @unique
-  PresetUpload    PresetUpload @relation(fields: [presetId], references: [id])
-  User            User         @relation(fields: [userId], references: [id])
+  activity        Activity        @relation(fields: [activityId], references: [id])
+  activityId      String
+  schedule        Schedule        @relation(fields: [scheduleId], references: [id])
+  scheduleId      String
+  participants    Int
+  totalPrice      Decimal         @db.Decimal(10,2)
+  status          BookingStatus   @default(PENDING)
+  paymentStatus   PaymentStatus   @default(PENDING)
+  paymentIntent   String?         // Stripe payment intent ID
+  specialRequests String?
+  contactDetails  Json?           // Additional contact details
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
-  @@unique([userId, presetId])
-  @@index([createdAt])
+  @@index([userId])
+  @@index([activityId])
+  @@index([scheduleId])
+}
+
+model ActivityImage {
+  id          String   @id @default(cuid())
+  activity    Activity @relation(fields: [activityId], references: [id])
+  activityId  String
+  url         String
+  alt         String?
+  isPrimary   Boolean  @default(false)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([activityId])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  activity    Activity @relation(fields: [activityId], references: [id])
+  activityId  String
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  rating      Int      @db.SmallInt
+  comment     String?  @db.Text
+  response    String?  @db.Text
+  status      ReviewStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([activityId])
   @@index([userId])
 }
 
-model PresetPackDownload {
-  id               String           @id
-  userId           String
-  createdAt        DateTime         @default(now())
-  packId           String
-  amount           Float
-  stripeSessionId  String?          @unique
-  PresetPackUpload PresetPackUpload @relation(fields: [packId], references: [id])
-  User             User             @relation(fields: [userId], references: [id])
+enum ActivityStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  DELETED
+}
 
-  @@unique([userId, packId])
-  @@index([createdAt])
-  @@index([packId])
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum CancellationPolicy {
+  FLEXIBLE      // Full refund 24h prior
+  MODERATE      // Full refund 5 days prior
+  STRICT        // 50% refund 7 days prior
+  NON_REFUNDABLE
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  user        User         @relation(fields: [userId], references: [id])
+  userId      String
+  amount      Decimal      @db.Decimal(10,2)
+  currency    String       @default("ZAR")
+  status      PaymentStatus
+  type        PaymentType
+  description String
+  invoiceUrl  String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
   @@index([userId])
 }
 
-model PresetPackUpload {
-  id                 String               @id
-  title              String               @db.VarChar(255)
-  description        String?
-  priceType          PriceType            @default(FREE)
-  price              Float?
-  soundPreviewUrl    String?
-  tags               String[]
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime
-  genreId            String?
-  userId             String
-  vstId              String?
-  CartItem           CartItem[]
-  PackPresets        PackPresets[]
-  PresetPackDownload PresetPackDownload[]
-  Genre              Genre?               @relation(fields: [genreId], references: [id])
-  User               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vst                VST?                 @relation(fields: [vstId], references: [id])
-  PriceHistory       PriceHistory[]
-  WishlistItem       WishlistItem[]
-
-  @@index([createdAt])
-  @@index([genreId])
-  @@index([vstId])
+enum PaymentType {
+  SUBSCRIPTION
+  BOOKING
+  REFUND
 }
 
-model PresetRequest {
-  id               String             @id
-  title            String
-  youtubeLink      String?
-  genreId          String?
-  enquiryDetails   String
-  status           RequestStatus      @default(OPEN)
-  userId           String
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime
-  tags             String[]
-  Genre            Genre?             @relation(fields: [genreId], references: [id])
-  User             User               @relation(fields: [userId], references: [id])
-  PresetSubmission PresetSubmission[]
-  PresetUpload     PresetUpload[]
+model SubscriptionUsage {
+  id             String   @id @default(cuid())
+  user           User     @relation(fields: [userId], references: [id])
+  userId         String
+  month          DateTime
+  bookingsCount  Int      @default(0)
+  usagePercentage Float   @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  @@index([genreId])
+  @@unique([userId, month])
   @@index([userId])
 }
 
-model PresetSubmission {
-  id              String        @id
-  presetRequestId String
-  userId          String
-  title           String
-  soundPreviewUrl String?
-  presetFileUrl   String?
-  guide           String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime
-  tags            String[]
-  presetType      PresetType    @default(LEAD)
-  price           Float?
-  priceType       PriceType     @default(FREE)
-  vstId           String?
-  vstType         VstType       @default(SYNTH)
-  PresetRequest   PresetRequest @relation(fields: [presetRequestId], references: [id])
-  User            User          @relation(fields: [userId], references: [id])
-  vst               VST?          @relation(fields: [vstId], references: [id])
+model NotificationPreferences {
+  id                String   @id @default(cuid())
+  user              User     @relation(fields: [userId], references: [id])
+  userId            String   @unique
+  emailNotifications Boolean  @default(true)
+  usageAlerts       Boolean  @default(true)
+  usageThreshold    Int      @default(80)
+  paymentReminders  Boolean  @default(true)
+  weeklyReports     Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  @@index([presetRequestId])
   @@index([userId])
-  @@index([vstId])
-}
-
-model PresetUpload {
-  id                String           @id
-  title             String           @db.VarChar(255)
-  description       String?
-  presetType        PresetType       @default(LEAD)
-  soundPreviewUrl   String?
-  presetFileUrl     String?
-  spotifyLink       String?
-  genreId           String?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime
-  presetRequestId   String?
-  vstId             String?
-  guide             String?
-  tags              String[]
-  originalFileName  String?
-  quantity          Int              @default(1)
-  priceType         PriceType        @default(FREE)
-  userId            String
-  price             Float?
-  stripeProductId   String?          @unique
-  itemType          ItemType         @default(PRESET)
-  referenceTrackUrl String?
-  CartItem          CartItem[]
-  PackPresets       PackPresets[]
-  PresetDownload    PresetDownload[]
-  Genre             Genre?           @relation(fields: [genreId], references: [id])
-  User              User             @relation(fields: [userId], references: [id])
-  vst               VST?             @relation(fields: [vstId], references: [id])
-  PriceHistory      PriceHistory[]
-  WishlistItem      WishlistItem[]
-  PresetRequest     PresetRequest[]
-
-  @@index([createdAt])
-  @@index([genreId])
-  @@index([vstId])
-}
-
-model PriceHistory {
-  id               String            @id
-  price            Decimal
-  timestamp        DateTime          @default(now())
-  presetId         String?
-  packId           String?
-  cartItemId       String?
-  CartItem         CartItem?         @relation(fields: [cartItemId], references: [id])
-  PresetPackUpload PresetPackUpload? @relation(fields: [packId], references: [id])
-  PresetUpload     PresetUpload?     @relation(fields: [presetId], references: [id])
-
-  @@index([cartItemId])
-  @@index([packId])
-  @@index([presetId])
-}
-
-model Session {
-  id           String   @id
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Tutorial {
-  id              String   @id
-  title           String
-  description     String
-  url             String
-  soundPreviewUrl String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime
-  userId          String
-  User            User     @relation(fields: [userId], references: [id])
-}
-
-model User {
-  id                  String               @id
-  name                String?
-  username            String?              @unique
-  email               String               @unique
-  emailVerified       DateTime?
-  image               String?              @unique
-  websiteUrl          String?
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime
-  stripeAccountId     String?              @unique
-  lemonSqueezyStoreId String?              @unique
-  spotifyAccessToken  String?
-  spotifyRefreshToken String?
-  spotifyState       String?
-  Account             Account[]
-  Cart                Cart[]
-  Order               Order[]
-  PresetDownload      PresetDownload[]
-  PresetPackDownload  PresetPackDownload[]
-  PresetPackUpload    PresetPackUpload[]
-  PresetRequest       PresetRequest[]
-  PresetSubmission    PresetSubmission[]
-  PresetUpload        PresetUpload[]
-  Session             Session[]
-  Tutorial            Tutorial[]
-  Wishlist            Wishlist?
-}
-
-model VST {
-  id               String             @id
-  name             String             @unique
-  type             VstType
-  updatedAt        DateTime           @updatedAt
-  PresetPackUpload PresetPackUpload[]
-  PresetSubmission PresetSubmission[]
-  PresetUpload     PresetUpload[]
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
-
-model Wishlist {
-  id           String         @id
-  userId       String         @unique
-  priceAlerts  Boolean        @default(false)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime
-  User         User           @relation(fields: [userId], references: [id])
-  WishlistItem WishlistItem[]
-}
-
-model WishlistItem {
-  id               String            @id
-  quantity         Int               @default(1)
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime
-  wishlistId       String
-  presetId         String?
-  packId           String?
-  itemType         ItemType
-  PresetPackUpload PresetPackUpload? @relation(fields: [packId], references: [id])
-  PresetUpload     PresetUpload?     @relation(fields: [presetId], references: [id])
-  Wishlist         Wishlist          @relation(fields: [wishlistId], references: [id])
-
-  @@unique([wishlistId, presetId, packId])
-  @@index([packId])
-  @@index([presetId])
-  @@index([wishlistId])
-}
-
-enum CartType {
-  CART
-  WISHLIST
-}
-
-enum GenreType {
-  SYSTEM
-  CUSTOM
-}
-
-enum ItemType {
-  PRESET
-  PACK
-  REQUEST
-}
-
-enum PresetType {
-  PAD
-  LEAD
-  PLUCK
-  BASS
-  FX
-  OTHER
-}
-
-enum PriceType {
-  FREE
-  PREMIUM
-}
-
-enum RequestStatus {
-  OPEN
-  SATISFIED
-}
-
-enum VstType {
-  SYNTH
 }

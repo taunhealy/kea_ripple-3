@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 import { Providers } from "./components/Providers";
 import { Toaster } from "sonner";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 import "@/app/globals.css";
 import dynamic from "next/dynamic";
@@ -27,6 +28,7 @@ export default function RootLayout({
             </div>
           </div>
           <Toaster />
+          <NotificationBell />
         </Providers>
       </body>
     </html>
